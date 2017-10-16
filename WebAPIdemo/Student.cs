@@ -24,8 +24,6 @@ namespace WebAPIdemo
         public string StudentName { get; set; }
         public Nullable<int> StandardId { get; set; }
         public byte[] RowVersion { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
     
         public virtual Standard Standard { get; set; }
         public virtual StudentAddress StudentAddress { get; set; }

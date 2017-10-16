@@ -1,4 +1,4 @@
-﻿// T4 code generation is enabled for model 'C:\Users\John\Desktop\CECS475\LAB8\WebAPIdemo\School.edmx'. 
+﻿// T4 code generation is enabled for model 'C:\Users\John\Desktop\The final battle of CSULB\CECS475\LAB 8\WebAPIdemo\School.edmx'. 
 // To enable legacy code generation, change the value of the 'Code Generation Strategy' designer
 // property to 'Legacy ObjectContext'. This property is available in the Properties Window when the model
 // is open in the designer.

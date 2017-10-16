@@ -58,7 +58,7 @@
           <Property Name="StandardId" Type="int" />
         </EntityType>
         <!--Errors Found During Generation:
-warning 6002: The table/view 'C:\USERS\JOHN\DESKTOP\CECS475\LAB8\WEBAPIDEMO\APP_DATA\SCHOOLDB.MDF.dbo.View_StudentCourse' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+warning 6002: The table/view 'C:\USERS\JOHN\DESKTOP\THE FINAL BATTLE OF CSULB\CECS475\LAB 8\WEBAPIDEMO\APP_DATA\SCHOOLDB.MDF.dbo.View_StudentCourse' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
         <EntityType Name="View_StudentCourse">
           <Key>
             <PropertyRef Name="StudentID" />
@@ -243,8 +243,6 @@ warning 6002: The table/view 'C:\USERS\JOHN\DESKTOP\CECS475\LAB8\WEBAPIDEMO\APP_
           <NavigationProperty Name="Standard" Relationship="Self.FK_Student_Standard" FromRole="Student" ToRole="Standard" />
           <NavigationProperty Name="StudentAddress" Relationship="Self.FK_StudentAddress_Student" FromRole="Student" ToRole="StudentAddress" />
           <NavigationProperty Name="Courses" Relationship="Self.StudentCourse" FromRole="Student" ToRole="Course" />
-          <Property Name="FirstName" Type="String" Nullable="false" />
-          <Property Name="LastName" Type="String" Nullable="false" />
         </EntityType>
         <EntityType Name="StudentAddress">
           <Key>

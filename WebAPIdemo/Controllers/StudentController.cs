@@ -1,212 +1,143 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Web.Http;
+using System.Web;
+using System.Web.Mvc;
 using WebAPIdemo.Models;
 
 namespace WebAPIdemo.Controllers
 {
-    public class StudentController : ApiController
+    public class StudentController : Controller
     {
-
-        public StudentController()
+        // GET: Student
+        public ActionResult Index()
         {
-        }
+            IEnumerable<StudentViewModel> students = null;
 
-        public IHttpActionResult GetAllStudents(bool includeAddress = false)
-        {
-            IList<StudentViewModel> students = null;
-
-            using (var ctx = new SchoolDBEntities())
+            using (var client = new HttpClient())
             {
-                students = ctx.Students.Include("StudentAddress").Select(s => new StudentViewModel()
+                client.BaseAddress = new Uri("http://localhost:49830/api/");
+                //HTTP GET
+                var responseTask = client.GetAsync("student");
+                responseTask.Wait();
+
+                var result = responseTask.Result;
+                if (result.IsSuccessStatusCode)
                 {
-                    Id = s.StudentID,
-                    FirstName = s.FirstName,
-                    LastName = s.LastName,
-                    Address = s.StudentAddress == null || includeAddress == false ? null : new AddressViewModel()
-                    {
-                        StudentId = s.StudentAddress.StudentID,
-                        Address1 = s.StudentAddress.Address1,
-                        Address2 = s.StudentAddress.Address2,
-                        City = s.StudentAddress.City,
-                        State = s.StudentAddress.State
-                    }
-                }).ToList<StudentViewModel>();
+                    var readTask = result.Content.ReadAsAsync<IList<StudentViewModel>>();
+                    readTask.Wait();
+
+                    students = readTask.Result;
+                }
+                else //web api sent error response 
+                {
+                    //log response status here..
+
+                    students = Enumerable.Empty<StudentViewModel>();
+
+                    ModelState.AddModelError(string.Empty, "Server error. Please contact administrator.");
+                }
             }
-
-
-            if (students == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(students);
-
+            return View(students);
         }
 
-        public IHttpActionResult GetStudentById(int id)
+        //Post Medthod
+        public ActionResult create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult create(StudentViewModel student)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("http://localhost:49830/api/student");
+
+                //HTTP POST
+                var postTask = client.PostAsJsonAsync<StudentViewModel>("student", student);
+                postTask.Wait();
+
+                var result = postTask.Result;
+                if (result.IsSuccessStatusCode)
+                {
+                    return RedirectToAction("Index");
+                }
+            }
+
+            ModelState.AddModelError(string.Empty, "Server Error. Please contact administrator.");
+
+            return View(student);
+        }
+
+        //Put Method
+        public ActionResult Edit(int id)
         {
             StudentViewModel student = null;
 
-            using (var ctx = new SchoolDBEntities())
+            using (var client = new HttpClient())
             {
-                student = ctx.Students.Include("StudentAddress")
-                    .Where(s => s.StudentID == id)
-                    .Select(s => new StudentViewModel()
-                    {
-                        Id = s.StudentID,
-                        FirstName = s.FirstName,
-                        LastName = s.LastName
-                    }).FirstOrDefault<StudentViewModel>();
-            }
+                client.BaseAddress = new Uri("http://localhost:49830/api/");
+                //HTTP GET
+                var responseTask = client.GetAsync("student?id=" + id.ToString());
+                responseTask.Wait();
 
-            if (student == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(student);
-        }
-
-        public IHttpActionResult GetAllStudents(string name)
-        {
-            IList<StudentViewModel> students = null;
-
-            using (var ctx = new SchoolDBEntities())
-            {
-                students = ctx.Students.Include("StudentAddress")
-                    .Where(s => s.FirstName.ToLower() == name.ToLower())
-                    .Select(s => new StudentViewModel()
-                    {
-                        Id = s.StudentID,
-                        FirstName = s.FirstName,
-                        LastName = s.LastName,
-                        Address = s.StudentAddress == null ? null : new AddressViewModel()
-                        {
-                            StudentId = s.StudentAddress.StudentID,
-                            Address1 = s.StudentAddress.Address1,
-                            Address2 = s.StudentAddress.Address2,
-                            City = s.StudentAddress.City,
-                            State = s.StudentAddress.State
-                        }
-                    }).ToList<StudentViewModel>();
-            }
-
-
-            if (students.Count == 0)
-            {
-                return NotFound();
-            }
-
-            return Ok(students);
-
-        }
-
-        public IHttpActionResult GetAllStudentsInSameStandard(int standardId)
-        {
-            IList<StudentViewModel> students = null;
-
-            using (var ctx = new SchoolDBEntities())
-            {
-                students = ctx.Students.Include("StudentAddress").Include("Standard").Where(s => s.StandardId == standardId)
-                            .Select(s => new StudentViewModel()
-                            {
-                                Id = s.StudentID,
-                                FirstName = s.FirstName,
-                                LastName = s.LastName,
-                                Address = s.StudentAddress == null ? null : new AddressViewModel()
-                                {
-                                    StudentId = s.StudentAddress.StudentID,
-                                    Address1 = s.StudentAddress.Address1,
-                                    Address2 = s.StudentAddress.Address2,
-                                    City = s.StudentAddress.City,
-                                    State = s.StudentAddress.State
-                                },
-                                Standard = new StandardViewModel()
-                                {
-                                    StandardId = s.Standard.StandardId,
-                                    Name = s.Standard.StandardName
-                                }
-                            }).ToList<StudentViewModel>();
-            }
-
-
-            if (students.Count == 0)
-            {
-                return NotFound();
-            }
-
-            return Ok(students);
-        }
-
-        //post method
-        public IHttpActionResult PostNewStudent(StudentViewModel student)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest("Invalid data.");
-
-            using (var ctx = new SchoolDBEntities())
-            {
-                ctx.Students.Add(new Student()
+                var result = responseTask.Result;
+                if (result.IsSuccessStatusCode)
                 {
-                    StudentID = student.Id,
-                    FirstName = student.FirstName,
-                    LastName = student.LastName
-                });
+                    var readTask = result.Content.ReadAsAsync<StudentViewModel>();
+                    readTask.Wait();
 
-                ctx.SaveChanges();
-            }
-
-            return Ok();
-        }
-
-        //put method
-        public IHttpActionResult Put(StudentViewModel student)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest("Not a valid model");
-
-            using (var ctx = new SchoolDBEntities())
-            {
-                var existingStudent = ctx.Students.Where(s => s.StudentID == student.Id)
-                                                        .FirstOrDefault<Student>();
-
-                if (existingStudent != null)
-                {
-                    existingStudent.FirstName = student.FirstName;
-                    existingStudent.LastName = student.LastName;
-
-                    ctx.SaveChanges();
-                }
-                else
-                {
-                    return NotFound();
+                    student = readTask.Result;
                 }
             }
 
-            return Ok();
+            return View(student);
         }
 
-        //delete method
-        public IHttpActionResult Delete(int id)
+        [HttpPost]
+        public ActionResult Edit(StudentViewModel student)
         {
-            if (id <= 0)
-                return BadRequest("Not a valid student id");
-
-            using (var ctx = new SchoolDBEntities())
+            using (var client = new HttpClient())
             {
-                var student = ctx.Students
-                    .Where(s => s.StudentID == id)
-                    .FirstOrDefault();
+                client.BaseAddress = new Uri("http://localhost:49830/api/student");
 
-                ctx.Entry(student).State = System.Data.Entity.EntityState.Deleted;
-                ctx.SaveChanges();
+                //HTTP POST
+                var putTask = client.PutAsJsonAsync<StudentViewModel>("student", student);
+                putTask.Wait();
+
+
+                var result = putTask.Result;
+                if (result.IsSuccessStatusCode)
+                {
+
+                    return RedirectToAction("Index");
+                }
+            }
+            return View(student);
+        }
+
+        //Delete Method
+        public ActionResult Delete(int id)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("http://localhost:49830/api/");
+
+                //HTTP DELETE
+                var deleteTask = client.DeleteAsync("student/" + id.ToString());
+                deleteTask.Wait();
+
+                var result = deleteTask.Result;
+                if (result.IsSuccessStatusCode)
+                {
+
+                    return RedirectToAction("Index");
+                }
             }
 
-            return Ok();
+            return RedirectToAction("Index");
         }
     }
 }
